@@ -1,0 +1,14 @@
+page.tsx==>create.tsx
+websocketserver.ts
+route.ts==>sendWebsocket.ts
+
+1st send msg to websocket and get back the response  and eventually 
+send msg to all client who connncetd with port 8080
+then
+call sendWebsocket.ts   to save data in database
+bcoz by doing so i will aachive 2 thing 
+1.send msg to all clinet quickly 
+2.also save msg to db  
+but in doing so 1msg is sent fine and websocketserver and route.ts
+is also working fine but 2nd msg theer is lot of post/api call is 
+happining continous why??
