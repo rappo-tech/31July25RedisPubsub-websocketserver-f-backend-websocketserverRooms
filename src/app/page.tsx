@@ -4,7 +4,7 @@ export default  function Home() {
 
 return (<div>
 
-<Link href={'/client1'}>
+<Link href={'/roomClient'}>
 <button className="bg-amber-500">go to create</button>
 </Link>
 

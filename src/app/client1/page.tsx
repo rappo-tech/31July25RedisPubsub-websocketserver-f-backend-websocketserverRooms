@@ -46,7 +46,7 @@ setStatus('try catch err ')
 }
 const sendMsg=()=>{
 if(ws && msg){
-ws.send(msg)
+ws.send(msg)// directly sending  the msg to websocket 
 sendToBackend()
 }
 }
