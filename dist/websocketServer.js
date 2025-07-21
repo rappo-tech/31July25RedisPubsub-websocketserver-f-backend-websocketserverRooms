@@ -1,32 +1,71 @@
 import { WebSocketServer, WebSocket } from "ws";
 const wss = new WebSocketServer({ port: 8080 });
-console.log('WebSocket server running on port 8080 for rooms ');
-const rooms = {}; // ✅ Room registry
+console.log('WebSocket server started on port 8080');
+// Store clients by category (rooms)
+const categoryRooms = {};
 wss.on('connection', (socket) => {
-    console.log('✅ Client connected');
+    console.log('New client connected');
+    let currentCategory = null;
     socket.on('message', (data) => {
-        const { room, msg } = JSON.parse(data.toString());
-        // ✅ Step 1: Join room if not already
-        if (!rooms[room]) {
-            rooms[room] = new Set();
-        }
-        rooms[room].add(socket);
-        console.log(`✅ Message from ${room}: ${msg}`);
-        // ✅ Step 2: Broadcast to that room
-        rooms[room].forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ room, msg: msg.toUpperCase() }));
+        try {
+            const message = JSON.parse(data.toString());
+            // Handle joining a category room
+            if (message.action === 'join') {
+                const { catogry } = message;
+                // Remove from previous category if exists
+                if (currentCategory && categoryRooms[currentCategory]) {
+                    categoryRooms[currentCategory].delete(socket);
+                }
+                // Add to new category
+                if (!categoryRooms[catogry]) {
+                    categoryRooms[catogry] = new Set();
+                }
+                categoryRooms[catogry].add(socket);
+                currentCategory = catogry;
+                console.log(`Client joined category: ${catogry}`);
+                socket.send(JSON.stringify({
+                    type: 'joined',
+                    catogry: catogry,
+                    message: `Joined category: ${catogry}`
+                }));
+                return;
             }
-        });
-        console.log(`total no  of clients in this  room :${rooms[room].size}`);
-        console.log(`total no of  clinet : ${wss.clients.size}`);
-        console.log(`total no of rooms :${Object.keys(rooms).length} `);
+            // Handle broadcasting message to category (auto-join if not in room)
+            if (message.catogry && message.prodName) {
+                const { catogry, prodName } = message;
+                console.log(`Broadcasting to category ${catogry}: ${prodName}`);
+                // Auto-create category room if it doesn't exist
+                if (!categoryRooms[catogry]) {
+                    categoryRooms[catogry] = new Set();
+                    console.log(`Created new category room: ${catogry}`);
+                }
+                // Send to all clients in this category
+                categoryRooms[catogry].forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'message',
+                            catogry: catogry,
+                            prodName: prodName.toUpperCase(),
+                            timestamp: new Date().toISOString()
+                        }));
+                    }
+                });
+                console.log(`Sent to ${categoryRooms[catogry].size} clients in ${catogry}`);
+            }
+        }
+        catch (error) {
+            console.error('Error parsing message:', error);
+        }
     });
     socket.on('close', () => {
-        console.log('❌ Client disconnected');
-        // ✅ Step 3: Remove socket from all rooms
-        for (const room in rooms) {
-            rooms[room].delete(socket);
+        // Remove from current category
+        if (currentCategory && categoryRooms[currentCategory]) {
+            categoryRooms[currentCategory].delete(socket);
+            console.log(`Client left category: ${currentCategory}`);
         }
+        console.log('Client disconnected');
+    });
+    socket.on('error', (error) => {
+        console.error('WebSocket error:', error);
     });
 });
