@@ -1,84 +1,69 @@
-import {WebSocketServer, WebSocket} from "ws";
+//socket.on('message')=req.json()===input ,28:02
+//socket.send('msg')= req.json()====output
+import { WebSocketServer, WebSocket } from "ws";
+import http from "http";
 
-const wss = new WebSocketServer({port: 8080})
-console.log('WebSocket server started on port 8080')
-
-// Store clients by category (rooms)
-const categoryRooms: Record<string, Set<WebSocket>> = {}
-
-wss.on('connection', (socket: WebSocket) => {
-  console.log('New client connected')
-  let currentCategory: string | null = null
-  
-  socket.on('message', (data: string | Buffer) => {
-    try {
-      const message = JSON.parse(data.toString())
-      
-      // Handle joining a category room
-      if(message.action === 'join') {
-        const {catogry} = message
-        
-        // Remove from previous category if exists
-        if(currentCategory && categoryRooms[currentCategory]) {
-          categoryRooms[currentCategory].delete(socket)
-        }
-        
-        // Add to new category
-        if(!categoryRooms[catogry]) {
-          categoryRooms[catogry] = new Set()
-        }
-        categoryRooms[catogry].add(socket)
-        currentCategory = catogry
-        
-        console.log(`Client joined category: ${catogry}`)
-        socket.send(JSON.stringify({
-          type: 'joined',
-          catogry: catogry,
-          message: `Joined category: ${catogry}`
-        }))
-        return
-      }
-      
-      // Handle broadcasting message to category (auto-join if not in room)
-      if(message.catogry && message.prodName) {
-        const {catogry, prodName} = message
-        console.log(`Broadcasting to category ${catogry}: ${prodName}`)
-        
-        // Auto-create category room if it doesn't exist
-        if(!categoryRooms[catogry]) {
-          categoryRooms[catogry] = new Set()
-          console.log(`Created new category room: ${catogry}`)
-        }
-        
-        // Send to all clients in this category
-        categoryRooms[catogry].forEach((client) => {
-          if(client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'message',
-              catogry: catogry,
-              prodName: prodName.toUpperCase(),
-              timestamp: new Date().toISOString()
-            }))
+const server = http.createServer((req, res) => {
+  if (req.method === "POST" && req.url === "/broadcast") {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", () => {
+      try {
+        const { groupId, userId, content } = JSON.parse(body) as {
+          groupId: string;
+          userId: string;
+          content: string;
+        };
+        console.log(`Received message for group ${groupId}: ${userId}: ${content}`);
+          const capitalizedContent = content.toUpperCase();
+        rooms[groupId]?.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ userId, content:capitalizedContent }));
           }
-        })
-        console.log(`Sent to ${categoryRooms[catogry].size} clients in ${catogry}`)
+        });
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true }));
+      } catch (error) {
+        console.error("Error processing broadcast:", error);
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: "Failed to process message" }));
       }
-      
-    } catch(error) {
-      console.error('Error parsing message:', error)
+    });
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+const wss = new WebSocketServer({ server });
+const rooms: Record<string, Set<WebSocket>> = {};
+
+wss.on("connection", (ws: WebSocket) => {
+  console.log("Client connected");
+
+  ws.on("message", (data: string) => {
+    try {
+      const { action, groupId } = JSON.parse(data) as { action: string; groupId: string };
+      if (action === "join") { 
+        if (!rooms[groupId]) rooms[groupId] = new Set();
+        rooms[groupId].add(ws);
+        console.log(`Client joined group ${groupId}`);
+      }
+    } catch (error) {
+      console.error("Error processing message:", error);
     }
-  })
-  
-  socket.on('close', () => {
-    // Remove from current category
-    if(currentCategory && categoryRooms[currentCategory]) {
-      categoryRooms[currentCategory].delete(socket)
-      console.log(`Client left category: ${currentCategory}`)
+  });
+
+  ws.on("close", () => {
+    for (const groupId in rooms) {
+      rooms[groupId].delete(ws);
+      if (rooms[groupId].size === 0) delete rooms[groupId];
+      console.log(`Client left group ${groupId}`);
     }
-    console.log('Client disconnected')
-  })
-  
-  socket.on('error', (error) => {
-    console.error('WebSocket error:', error)
-  })
-})
+    console.log("Client disconnected");
+  });
+
+  ws.on("error", (error) => console.error("WebSocket error:", error));
+});
+
+server.listen(8080, () => console.log("WebSocket server running on ws://localhost:8080"));
