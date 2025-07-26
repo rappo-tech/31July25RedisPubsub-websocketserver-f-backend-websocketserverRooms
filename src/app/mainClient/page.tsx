@@ -17,6 +17,7 @@ export default function Home() {
       return;
     }
     const websocket = new WebSocket("ws://localhost:8080");
+    //new webSocket is broswerChrome api  not next js api 
     setWs(websocket);
 
     websocket.onopen = () => {
