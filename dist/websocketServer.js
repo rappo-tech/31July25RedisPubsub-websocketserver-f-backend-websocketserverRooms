@@ -1,18 +1,13 @@
-import { WebSocketServer, WebSocket } from "ws";
 import http from 'http';
+import { WebSocketServer } from 'ws';
 const server = http.createServer((req, res) => {
-    if (req.method === 'POST' && req.url === "/broadcast") {
+    if (req.url === '/broadcast' && req.method === 'POST') {
         let body = "";
-        req.on("data", (chunk) => (body += chunk));
-        req.on("end", () => {
-            const { prodName, groupId } = JSON.parse(body);
-            console.log(`1. prodNmae : ${prodName},groupId:${groupId}`);
-            // input receive the send response 
-            allGroups[groupId].forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({ capitalResponse: prodName.toUpperCase() })); // output send msg to browser 
-                    console.log(`2.send the prodName `);
-                }
+        req.on("data", (chunk) => body += chunk);
+        req.on('end', () => {
+            const { categoryId, clothName } = JSON.parse(body);
+            allCatogry[categoryId]?.forEach((clinet) => {
+                clinet.send(JSON.stringify({ capital: clothName.toUpperCase() }));
             });
         });
     }
@@ -20,28 +15,31 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ success: true }));
 });
 const wss = new WebSocketServer({ server });
-const allGroups = {};
+const allCatogry = {};
 wss.on('connection', (socket) => {
     socket.on('message', (data) => {
-        const { action, groupId } = JSON.parse(data);
-        console.log(`3.${action},groupId: ${groupId}`);
-        if (action === 'join') {
-            if (!allGroups[groupId]) {
-                allGroups[groupId] = new Set(); //creat a group 
+        const parsedData = JSON.parse(data);
+        const { action, categoryId } = parsedData;
+        if (action === 'JOIN') {
+            if (!allCatogry[categoryId]) {
+                allCatogry[categoryId] = new Set();
             }
-            allGroups[groupId].add(socket); //join wsocket with broswer
-            console.log(`4.joined websocket `);
+            allCatogry[categoryId].add(socket);
+            console.log(allCatogry[categoryId].size);
+            allCatogry[categoryId].forEach((client) => {
+                client.send(JSON.stringify({ totalUsers: allCatogry[categoryId].size }));
+            });
         }
     });
     socket.on("close", () => {
-        for (const groupId in allGroups) {
-            allGroups[groupId].delete(socket);
-            if (allGroups[groupId].size === 0)
-                delete allGroups[groupId];
-            console.log(`Client left group ${groupId}`);
+        for (const categoryId in allCatogry) {
+            allCatogry[categoryId].delete(socket);
+            if (allCatogry[categoryId].size === 0)
+                delete allCatogry[categoryId];
+            console.log(`Client left group ${categoryId}`);
         }
         console.log("Client disconnected");
     });
     socket.on("error", (error) => console.error("WebSocket error:", error));
 });
-server.listen({ port: 8080 }, () => console.log('websocket server started '));
+server.listen(8080, () => console.log('websocket server started at port 8080'));

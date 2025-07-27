@@ -1,13 +1,12 @@
-/*
-admin create catogry and product and put the prod  in same catogry user  open  his feed page and sees all catogry and their prods  wsocket== createAdmin.tsx==>create catogry and prod
-usertsx==see all catogry and prods 
+/*   myntra
+"⚠️ 3 other users are viewing/added this product to cart"
 
 
 
-#page.tsx==>1.admin.tsx,2.user.tsx(ws join,send catogryId,recieve prodname from websocket)
-#api.ts==>3.createAdmin.ts,4.createCatogry.ts,9.getCatogryId.ts
-5.createProds.ts(api catogryid,catogryname,prodname)(ws connect,send prodname to user.tsx ),
-7.getCatogry.ts,8.getProds.ts
-#6.websocketserver.ts
+1.websocketserver(rooms={}) object.keys(rooms).length
+api.ts==>createCatogry.ts,createCloths.ts(sendCloth,category),getCloths.ts
+page.tsx==>admin.tsx(),user.tsx(join websocket,sendCategory)
+
+
 
 */          

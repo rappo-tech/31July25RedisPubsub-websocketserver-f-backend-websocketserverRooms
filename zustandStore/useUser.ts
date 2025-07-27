@@ -1,8 +1,8 @@
 'use client'
+
 import {create} from 'zustand'
 //type of one object
 export interface objInStoreType{
-adminName:string, 
 categoryName:string
 }
 //type of store(1.type is object,2.type is fucniton )

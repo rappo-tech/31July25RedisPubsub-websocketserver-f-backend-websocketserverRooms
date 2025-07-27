@@ -6,24 +6,14 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-model AllAdmins {
-  id         String        @id @default(uuid())
-  adminName  String
-  allCategory AllCategory[]
+model ClothCategory{
+id String @id @default(uuid())
+categoryName String
+allCloths AllCloths[]
 }
-
-model AllCategory {
-  id           String        @id @default(uuid())
-  adminId      String
-  admin        AllAdmins     @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  categoryName String
-  allProds     AllProds[]
-}
-
-model AllProds {
-  id         String       @id @default(uuid())
-  categoryId String
-  category   AllCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  prodName   String
+model  AllCloths{
+id String @id @default(uuid())
+categoryId String
+category ClothCategory @relation(fields:[categoryId],references:[id],onDelete:Cascade)
+clothName String
 }

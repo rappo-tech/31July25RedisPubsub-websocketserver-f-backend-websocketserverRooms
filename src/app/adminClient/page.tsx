@@ -1,94 +1,80 @@
 'use client'
 
-import { useState } from "react"
-import axios from "axios"
 import { useUser } from "../../../zustandStore/useUser"
+import { useCallback, useState } from "react"
+import axios from "axios"
 import Link from "next/link"
 
-export default  function AdminClinet() {
-const[adminName,setAdminName]=useState<string>('')
+
+export default function Admin() {
+const[clothName,setClothName]=useState<string>('') 
+const[categoryName,setCatogryName]=useState<string>('')
 const[status,setStatus]=useState<string>('')
-const[categoryName,setCategoryName]=useState<string>('')
-const[prodName,setProdName]=useState<string>('')
-const {setStore,store}=useUser()
+const {setStore}=useUser()
 const[categoryId,setCategoryId]=useState<string>('')
 
-
-const createAdmin=async()=>{
-    try{
-const response=await axios.post('/api/createAdmin',{adminName},{headers:{'Content-Type':'application/json'}})
+const sendCategoryName=useCallback(async()=>{
+try{
+const response=await axios.post('/api/createCatogry',{categoryName},{headers:{'Content-Type':"application/json"},withCredentials:true})
 if(response.status===201){
-setStore({adminName:adminName,categoryName:''})
-setStatus(response.data)
-setAdminName('')
+setStore({categoryName:categoryName})
+setCategoryId(response.data.id)
 }
 }catch{
-setStatus('try catch errr ')
-    }
+setStatus('err while creating catogry ')
 }
+},[categoryName,setStore])
 
-const createCategory=async()=>{
+
+const sendProdName=useCallback(async()=>{
 try{
-const response=await axios.post('/api/createCatogry',{categoryName,adminName:store?.adminName},{headers:{'Content-Type':"application/json"}})
+const response=await axios.post('/api/createCloths',{categoryId,clothName,categoryName},{headers:{'Content-Type':"application/json"},withCredentials:true})
 if(response.status===201){
-setStore({adminName:adminName,categoryName:categoryName})
-setCategoryId(response.data.id)
+setClothName('')
+setStatus(response.data)
 }
 }catch{
 setStatus('try catch err ')
 }
-}
-const createproduct=async()=>{
-try{
-const response=await axios.post('/api/createProds',{categoryName:store?.categoryName,prodName},{headers:{'Content-Type':"application-json"}})
-if(response.status===201){
-setProdName('')
-}
-}catch{
-setStatus('try catch  err ')
-}
-}
+},[categoryId,clothName,categoryName])
 
-
-
-
-
-return(<div>
+return (<div>
 
 <input
 type="text"
-placeholder="enter your adminname "
-value={adminName}
-onChange={(e)=>setAdminName(e.target.value)}
-/>
-<button className="bg-green-600"  onClick={createAdmin}>send admins </button>
-
-<input
-type="text"
-placeholder="enter your catogrynmae "
+placeholder="enter your category"
 value={categoryName}
-onChange={(e)=>setCategoryName(e.target.value)}
+onChange={(e)=>setCatogryName(e.target.value)}
 />
-<button className="bg-red-600"  onClick={createCategory}>create category </button>
-<button className="bg-amber-300">Cat id:{categoryId}</button>
+<button className="bg-green-700" onClick={sendCategoryName}>setCatogryName</button>
+
+
 
 <input
 type="text"
-placeholder="enter your prodname "
-value={prodName}
-onChange={(e)=>setProdName(e.target.value)}
+placeholder="enter your clothname "
+value={clothName}
+onChange={(e)=>setClothName(e.target.value)}
 />
-<button className="bg-yellow-600"  onClick={createproduct}>create prod </button>
 
-<p>status:{status}</p>
-<p className="bg-teal-600" >store adminName : {store?.adminName}</p>
-<p className="bg-teal-600" >store actogryName : {store?.categoryName}</p>
+<button className="bg-green-700" onClick={sendProdName}>setclothname</button>
+
+
+<p>status: {status}</p>
+<p>created catogryId:{categoryId}</p>
+
 
 <Link href={'/userClient'}>
-<button className="bg-pink-600">go to user </button>
+<button className="bg-violet-500">go to user </button>
 </Link>
-
 
 
 </div>)
 }
+
+
+
+
+
+
+
