@@ -1,12 +1,19 @@
-/*   myntra
-"⚠️ 3 other users are viewing/added this product to cart"
+/* twitter
+live like increase in creater`s post feed and veiwer+liker
+live feed 
+
+api==>1.createTweets.ts,2.getTweets.ts,3.like.ts(this send data to websocketserver ),
+websocketServer.ts('this user has like  your tweet '),
+page.tsx==>user1.tsx(join ws ),user2.tsx(join ws )
 
 
 
-1.websocketserver(rooms={}) object.keys(rooms).length
-api.ts==>createCatogry.ts,createCloths.ts(sendCloth,category),getCloths.ts
-page.tsx==>admin.tsx(),user.tsx(join websocket,sendCategory)
+quesiton?=when u2  like u1`s tweet then like+chnage  how  will
+that reflect in u2 post  ?
 
-
+op1. user1===hotpolling  the database
+op2. websocketserver.ts=== pull db from prisma and send all the 
+updated  db to all clients who is connected  bruhh????
+i think opn2 is viable?? 
 
 */          

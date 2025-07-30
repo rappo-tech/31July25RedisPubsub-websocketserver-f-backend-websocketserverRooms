@@ -1,103 +1,88 @@
 'use client'
 
 import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
+import { typeAllTweets } from "../adminClient/page"
 import axios from "axios"
-interface resProd{
-categoryId:string, 
-categoryName:string, 
-allCloth:string[]
-}
 
 
- export default function UserClient() {
-
-const[allProds,setAllProds]=useState<resProd[]>([])
-const[status,setStatus]=useState<string>('')
+export default function UserClient() {
 const[ws,setWs]=useState<WebSocket|null>(null)
-const[wsResponse,setWsResponse]=useState<string>('')
 const[isConnected,setIsConnected]=useState<boolean>(false)
-const[totalUsers,setTotalUsers]=useState<string>('')
+const[allTweets,setAllTweets]=useState<typeAllTweets[]>([])
+const[status,setStatus]=useState<string>('')
 
-
-//join,recieve msg 
-const join=(categoryId:string)=>{
-const socket=new WebSocket("ws://localhost:8080")
+const join=(tweetId:string)=>{
+const socket= new WebSocket("ws://localhost:8080")
 socket.onopen=()=>{
 setWs(socket)
-socket.send(JSON.stringify({action:"JOIN",categoryId}))
+socket.send(JSON.stringify({action:"join",tweetId}))
 setIsConnected(true)
 }
 socket.onmessage=(event)=>{
-const capitalResponse=JSON.parse(event.data)
-setWsResponse(capitalResponse.capital)
-setTotalUsers(capitalResponse.totalUsers)
+const msg=JSON.parse(event.data)
+setAllTweets(msg.all)
 }
 socket.onclose=()=>{
 setIsConnected(false)
 setWs(null)
-}
-
-}
-
-const sendmsgviaws=()=>{
-if(ws){
-ws.send(JSON.stringify({type:'JOIN'}))
+setStatus('ws gone ')
 }
 }
 
 
+const sendviawebsocket=()=>{
+if(ws) return 
+}
 
-
-const getProds=useCallback(async()=>{
+const getTweets=useCallback(async()=>{
 try{
-const response=await axios.get('/api/getClothsNCategory')
+const response=await axios.get('/api/getTweets')
 if(response.status===201){
-setAllProds(response.data)
+setAllTweets(response.data)
 }
 }catch{
-setStatus('try catch err ')
+setStatus('try catch err tweets ')
 }
 },[])
 
-useEffect(()=>{
-getProds()
-},[getProds])
 
 
-return(<div>
+useEffect(()=> {
+getTweets()
+},[getTweets])
 
-<p className="bg-orange-600">{isConnected?'connected ':"disconnected "}</p>
-<p className="bg-teal-300">active users on catIgoryId: {totalUsers}</p>
 
-<p>response:{wsResponse}</p>
 
+
+return (<div>
+
+
+
+
+
+
+
+
+<p>{isConnected?'connected ':"disconnected "}</p>
 <div>{
-allProds.map((elemnt,index)=>{
+allTweets.map((element,index)=>{
 return <div key={index}>
-<p> category name:{elemnt.categoryName}</p>
-<button className="bg-pink-600 hover:bg-yellow-300" onClick={()=>join(elemnt.categoryId)}  >JOIN WS with categoryId:{elemnt.categoryId}</button>
-<div>{
-elemnt.allCloth.map((elemnt2,index2)=>{
-return <div key={index2}>
-<p>clothName: {elemnt2}</p>
-</div>
-})
-    }</div>
+<p>{element.tweetName}</p>
+<button className="bg-green-700 hover:bg-amber-100" >{element.id }</button>
+<p>{element.like}</p>
+<button className="bg-amber-600  hover:bg-amber-100" onClick={()=>join(element.id)} >join ws </button>
 </div>
 })
     }</div>
 
-<p>status:{status} </p>
-
-<Link href={'/adminClient'}>
-<button className="bg-orange-700 hover:bg-amber-400 ">go to admin </button>
-</Link>
+<p>status:{status}</p>
 
 
-<button onClick={sendmsgviaws}> join via fonetdn </button>
+<button onClick={sendviawebsocket}>send  via ws </button>
 
-</div>
-)
+
+</div>)
+
 }
- 
+
+

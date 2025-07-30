@@ -8,5 +8,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["websocketServer.ts"]
+  "include": ["*.ts"]
 }

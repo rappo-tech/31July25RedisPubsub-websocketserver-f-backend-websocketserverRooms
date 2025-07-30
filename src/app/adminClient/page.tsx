@@ -1,78 +1,95 @@
 'use client'
-
-import { useUser } from "../../../zustandStore/useUser"
-import { useCallback, useState } from "react"
 import axios from "axios"
+import { useState } from "react"
 import Link from "next/link"
 
 
-export default function Admin() {
-const[clothName,setClothName]=useState<string>('') 
-const[categoryName,setCatogryName]=useState<string>('')
-const[status,setStatus]=useState<string>('')
-const {setStore}=useUser()
-const[categoryId,setCategoryId]=useState<string>('')
 
-const sendCategoryName=useCallback(async()=>{
+
+export interface typeAllTweets{
+id:string,
+tweetName:string,
+like:number
+}
+
+
+export  default  function AdminClient() {
+    const[tweetName,setTweetName]=useState<string>('')
+    const[status,setStatus]=useState<string>('')
+    const[allTweets,setAllTweets]=useState<typeAllTweets[]>([])
+    const[activeTweet,setActiveTweet]=useState<string>('')
+
+const  createTweet=async ()=>{
 try{
-const response=await axios.post('/api/createCatogry',{categoryName},{headers:{'Content-Type':"application/json"},withCredentials:true})
+const response=await axios.post('/api/createTweets',{tweetName},{headers:{'Content-Type':'application/json'},withCredentials:true})
 if(response.status===201){
-setStore({categoryName:categoryName})
-setCategoryId(response.data.id)
+setTweetName('')
+} 
+}catch{
+return setStatus('try catch   err ')
+}
+}
+
+ const getTweets=async()=>{
+try{
+const response=await axios.get('/api/getTweets')
+if(response.status===201){
+setAllTweets(response.data)
 }
 }catch{
-setStatus('err while creating catogry ')
+setStatus('try catch err tweets ')
 }
-},[categoryName,setStore])
-
-
-const sendProdName=useCallback(async()=>{
+}
+const likeTweet=async()=>{
 try{
-const response=await axios.post('/api/createCloths',{categoryId,clothName,categoryName},{headers:{'Content-Type':"application/json"},withCredentials:true})
+const response=await axios.post('/api/like',{tweetName:activeTweet},{headers:{'Content-Type':"application/json"},withCredentials:true})
 if(response.status===201){
-setClothName('')
 setStatus(response.data)
 }
 }catch{
-setStatus('try catch err ')
+setStatus('try catch err')
 }
-},[categoryId,clothName,categoryName])
+}
 
 return (<div>
 
 <input
 type="text"
-placeholder="enter your category"
-value={categoryName}
-onChange={(e)=>setCatogryName(e.target.value)}
+placeholder="enter tweet name "
+value={tweetName}
+onChange={(e)=>setTweetName(e.target.value)}
 />
-<button className="bg-green-700" onClick={sendCategoryName}>setCatogryName</button>
+<button  className="bg-pink-500" onClick={createTweet}>post tweet</button>
 
 
 
-<input
-type="text"
-placeholder="enter your clothname "
-value={clothName}
-onChange={(e)=>setClothName(e.target.value)}
-/>
+<button  className="bg-red-500" onClick={getTweets}>get tweet</button>
+<div>{
+allTweets.map((element,index)=>{
+return <div key={index}>
+<p>{element.tweetName}</p>
+<button className="bg-green-700 hover:bg-amber-100" >{element.id}</button>
+<p>{element.like}</p>
+<button onClick={()=>{
+setActiveTweet(element.tweetName)
+}}>set active </button>
+{activeTweet===element.tweetName &&
+<button className="bg-pink-800" onClick={likeTweet}>like </button>
+}
+</div>
+})
+    }</div>
 
-<button className="bg-green-700" onClick={sendProdName}>setclothname</button>
 
-
-<p>status: {status}</p>
-<p>created catogryId:{categoryId}</p>
-
+<p>warning :{status}</p>
 
 <Link href={'/userClient'}>
-<button className="bg-violet-500">go to user </button>
+<button className="bg-blue-950 hover:bg-sky-400">go to user </button>
 </Link>
 
 
 </div>)
 }
-
-
 
 
 
