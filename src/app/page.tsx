@@ -22,7 +22,7 @@ return (<div>
 <button className="bg-red-500" onClick={()=>signOut()}> sign out </button>
 
 
-<Link href={'/adminClient'}>
+<Link href={'/userClient'}>
 <button className="bg-amber-500">go to create</button>
 </Link>
 
